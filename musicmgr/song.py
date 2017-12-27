@@ -32,6 +32,16 @@ def get_tag(tags, tag, file):
         return None
 
 
+def merge_tag(v1, v2):
+    if v1 is None:
+        return v2
+    elif v2 is None:
+        return v1
+    elif v1 == v2:
+        return v1
+    assert False, (v1, v2)
+
+
 def hash_file(file_name):
     return hashlib.sha256(open(file_name, 'rb').read()).digest()
 
@@ -40,15 +50,24 @@ class Song:
     def __init__(self, source):
         if isinstance(source, taglib.File):
             tags = source.tags
-            self._artist = tags["ARTIST"]
-            self._album = ensure_unique(tags["ALBUM"])
-            self._title = ensure_unique(tags["TITLE"])
-            self._genre = get_tag(tags, "GENRE", source.path)
-            self._date = get_tag(tags, "DATE", source.path)
-            self._track = get_tag(tags, "TRACKNUMBER", source.path)
+            self._artist = get_tag(tags, TAGS.ARTIST, source.path)
+            self._album = ensure_unique(tags[TAGS.ALBUM])
+            self._title = ensure_unique(tags[TAGS.TITLE])
+            self._genre = get_tag(tags, TAGS.GENRE, source.path)
+            self._date = get_tag(tags, TAGS.DATE, source.path)
+            self._track = get_tag(tags, TAGS.TRACKNUMBER, source.path)
             self._duration = source.length
             self._file_path = source.path
-            self._hash = hash_file(source.path)
+        elif isinstance(source, dict):
+            self._artist = source.get(TAGS.ARTIST, None)
+            self._title = source.get(TAGS.TITLE, None)
+            self._album = source.get(TAGS.ALBUM, None)
+            self._genre = source.get(TAGS.GENRE, None)
+            self._date = source.get(TAGS.DATE, None)
+            self._track = source.get(TAGS.TRACKNUMBER, None)
+
+            self._file_path = source.get("path", None)
+            self._duration = source.get("duration", None)
 
     @property
     def file_path(self):
@@ -84,10 +103,6 @@ class Song:
     @property
     def duration(self):
         return self._duration
-
-    @property
-    def hash(self):
-        return self._hash
 
     @property
     def directory(self):
@@ -163,12 +178,16 @@ class Song:
         file.write(line)
 
     def merge(self, other: "Song"):
-        
+        self._artist = merge_tag(self._artist, other._artist)
+        self._title = merge_tag(self._title, other._title)
+        self._track = merge_tag(self._track, other._track)
+        self._genre = merge_tag(self._genre, other._genre)
+        self._album = merge_tag(self._album, other._album)
+        self._date = merge_tag(self._date, other._date)
 
     def save_dict(self):
         save = {}
         for tag in default_tags:
             save[tag] = self.get_tag(tag)
         save["path"] = self.file_path
-        save["hash"] = self.hash
         return save

@@ -43,9 +43,30 @@ class Library:
     def songs(self):
         return tuple(self._songs)
 
+    @property
+    def path(self):
+        return self._path
+
     def merge(self, lib: "Library"):
         for alb in lib.albums:
             self.add_album(alb)
+
+    def difference(self, lib: "Library"):
+        """
+        Find all songs present in `self` that are not in lib.
+        """
+        surplus = Library(self.path)
+        for song in self._songs:
+            # OK, now we need to identify songs
+            same = False
+            for other in lib._songs:
+                if song.is_same_song(other):
+                    same = True
+                    break
+            if same:
+                continue
+            surplus.add_song(song)
+        return surplus
 
     def __str__(self):
         return "<Library at '%s'>" % self._path
@@ -55,14 +76,25 @@ class Library:
         for alb in albs:
             alb.save_txt(file, tags, delim)
 
-    def save(self):
-        base_path = os.path.join(self._path, ".musicmgr")
-        os.makedirs(base_path, exist_ok=True)
+    def save(self, target_file):
+        target_dir = os.path.split(target_file)[0]
+        if target_dir:
+            os.makedirs(target_dir, exist_ok=True)
+        library_db = []
         for alb in self.albums:  # type: Album
-            sd = alb.save_dict()
-            target_file = os.path.join(base_path, alb.title)
-            pickle.dump(sd, open(target_file, "wb"))
+            library_db.append(alb.save_dict())
+        pickle.dump(library_db, open(target_file, "wb"))
 
+    def load(self, source_file):
+        if not os.path.exists(source_file):
+            _logger.warning("Could not find library database %s", source_file)
+
+        data = pickle.load(open(source_file, "rb"))
+        for album_data in data:
+            album = Album(album_data["title"], album_data["artist"], directory=album_data["directory"])
+            for s in album_data["songs"]:
+                album.add_song(Song(s))
+            self.add_album(album)
 
 #def check_for_missing_tags(lib: Library):
 #    for s in lib.songs:

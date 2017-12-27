@@ -7,7 +7,9 @@ _ALBUM_TAGS = [TAGS.ARTIST, TAGS.GENRE, TAGS.DATE]
 class Album:
     def __init__(self, title, artist, directory=None):
         self._title = title
-        self._artist = artist
+        if isinstance(artist, str):
+            artist = [artist]
+        self._artist = set(artist)
         self._directory = directory
         self._songs = []
 
@@ -32,6 +34,7 @@ class Album:
         assert song.album == self.title
         self._songs.append(song)
         self._songs.sort(key=lambda x: x.track)
+        self._artist = set(self._artist) | set(song.artist)
 
     def set_tag(self, tag, value):
         album_tags = ("DATE", "GENRE")
@@ -43,17 +46,21 @@ class Album:
         if isinstance(item, Song):
             if item in self._songs:
                 return True
-            if item.hash in [s.hash for s in self._songs]:
-                return True
             # TODO less strict check that is not object but data specific!
         return False
 
     def __str__(self):
+        artist = list(self.artist)
+        if len(artist) == 1:
+            artist = artist[0]
         songs = ", ".join([s.title for s in self._songs])
-        return '<Album "%s" by %s: %s>' % (self.title, self.artist, songs)
+        return '<Album "%s" by %s: %s>' % (self.title, artist, songs)
 
     def __repr__(self):
-        return '<Album "%s" by %s>' % (self.title, self.artist)
+        artist = list(self.artist)
+        if len(artist) == 1:
+            artist = artist[0]
+        return '<Album "%s" by %s>' % (self.title, artist)
 
     def save_txt(self, file, tags, delim="\t"):
         for song in self._songs:
