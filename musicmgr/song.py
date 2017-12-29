@@ -74,11 +74,11 @@ class Song:
         return self._file_path
 
     @property
-    def title(self):
+    def title(self) -> str:
         return self._title
 
     @property
-    def album(self):
+    def album(self) -> str:
         return self._album
 
     @property
@@ -134,11 +134,11 @@ class Song:
 
     def is_same_song(self, other):
         assert isinstance(other, Song)
-        if self.title != other.title:
+        if self.title.lower() != other.title.lower():
             return False
         if self.artist != other.artist:
             return False
-        if self.album is not None and other.album is not None and self.album != other.album:
+        if self.album is not None and other.album is not None and self.album.lower() != other.album.lower():
             return False
 
         return True
