@@ -62,7 +62,6 @@ if args.export:
     for song in lib.songs:
         source = song.file_path
         target = os.path.join(args.export, os.path.relpath(song.file_path, lib.path))
-        print(target)
         target_dir = os.path.split(target)[0]
         os.makedirs(target_dir, exist_ok=True)
         shutil.copyfile(source, target)

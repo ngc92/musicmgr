@@ -24,9 +24,12 @@ def ensure_unique(tag_value):
     return tag_value[0]
 
 
-def get_tag(tags, tag, file):
+def get_tag(tags, tag, file, single_value=False):
     if tag in tags:
-        return tags[tag]
+        if single_value:
+            return tags[tag]
+        else:
+            return tags[tag][0]
     else:
         _log.warning("Missing tag %s in %s", tag, file)
         return None
@@ -92,7 +95,7 @@ class Song:
     @property
     def track(self):
         if self._track is None:
-            return -1
+            return "-1"
         else:
             return self._track
 

@@ -8,10 +8,11 @@ from .library import Library
 
 _logger = logging.getLogger(__name__)
 _MUSIC_FILES = [".mp3", ".flac", ".m4a", ".wav", ".wma"]
-_OTHER_FILES = [".ini", ".jpg", ".png"]
+_OTHER_FILES = [".ini", ".jpg", ".png", ".db"]
 
 
 def scan_folder(directory, reference: Library=None):
+    unreadable_files = []
     if reference is not None:
         if isinstance(reference, Library):
             known_files = [s.file_path for s in reference.songs]
@@ -37,5 +38,7 @@ def scan_folder(directory, reference: Library=None):
                     song = Song(taglib.File(file_path))
                     lib.add_song(song)
             except Exception as error:
-                print(error)
+                _logger.error("Could not load file %s: %s: %s", file_path, type(error).__name__,
+                              error)
+                unreadable_files.append(file_path)
     return lib
